@@ -1,0 +1,200 @@
+{
+  "users": [
+    {
+      "id": "02ea",
+      "username": "Admin",
+      "email": "admin@gmail.com",
+      "password": "admin123",
+      "confpass": "admin123",
+      "role": "Admin"
+    },
+    {
+      "id": "b5a4",
+      "username": "Parth",
+      "email": "parth@gmail.com",
+      "password": "ppp111",
+      "confpass": "ppp111",
+      "createdAt": "2025-01-27T10:54:25.371Z",
+      "role": "User"
+    },
+    {
+      "id": "2f70",
+      "username": "Valay",
+      "email": "valay@gmail.com",
+      "password": "ooo222",
+      "confpass": "ooo222",
+      "createdAt": "2025-01-27T11:24:35.271Z",
+      "role": "User"
+    },
+    {
+      "id": "f149",
+      "username": "aaa",
+      "email": "aaa",
+      "password": "aaa",
+      "confpass": "aaa",
+      "createdAt": "2025-02-03T09:04:12.909Z",
+      "role": "User"
+    },
+    {
+      "id": "8acb",
+      "username": "Atul",
+      "email": "atulprjpt@gmail.com",
+      "password": "atul",
+      "confpass": "atul",
+      "createdAt": "2025-02-18T10:42:10.855Z",
+      "role": "User"
+    }
+  ],
+  "products": [
+    {
+      "id": "9a3d",
+      "image": "http://res.cloudinary.com/dqlnftw5r/image/upload/v1739615797/tailwind-vite-react-crud/bjckaqp04gaph2c92y0h.png",
+      "title": "Product1234",
+      "price": "87",
+      "category": "Art & Craft",
+      "stock": 95,
+      "brand": "88",
+      "description": "lll",
+      "createdAt": "2025-02-14T13:21:13.213Z",
+      "updatedAt": "2025-02-20T07:51:36.820Z",
+      "qty": 1
+    },
+    {
+      "id": "828b",
+      "title": "p1",
+      "price": "77",
+      "category": "Fashion",
+      "image": "http://res.cloudinary.com/dqlnftw5r/image/upload/v1739599185/tailwind-vite-react-crud/p4y4lr2x4quzwfbgyf2d.png",
+      "stock": 21,
+      "brand": "abc",
+      "description": "good product",
+      "createdAt": "2025-02-15T05:59:53.372Z",
+      "qty": 1,
+      "updatedAt": "2025-02-20T07:51:36.849Z"
+    },
+    {
+      "id": "76af",
+      "title": "product2",
+      "price": "25",
+      "category": "Beauty",
+      "image": "http://res.cloudinary.com/dqlnftw5r/image/upload/v1739599363/tailwind-vite-react-crud/ag23ikq4lt32nexhesyz.png",
+      "stock": 39,
+      "brand": "new",
+      "description": "mmmmmmm",
+      "createdAt": "2025-02-15T06:03:45.419Z",
+      "qty": 1,
+      "updatedAt": "2025-02-20T07:48:55.481Z"
+    },
+    {
+      "id": "dd4b",
+      "title": "pp",
+      "price": "102",
+      "category": "Books",
+      "image": "http://res.cloudinary.com/dqlnftw5r/image/upload/v1739601484/tailwind-vite-react-crud/mz1en8myowvo1z9dlmus.png",
+      "stock": "44",
+      "brand": "44",
+      "description": "4444",
+      "createdAt": "2025-02-15T06:38:13.721Z",
+      "updatedAt": "2025-02-17T12:31:29.488Z"
+    },
+    {
+      "id": "5a63",
+      "title": "ppp",
+      "price": "15.2",
+      "category": "Electronics",
+      "image": "http://res.cloudinary.com/dqlnftw5r/image/upload/v1739612869/tailwind-vite-react-crud/feprek3d6kqf3uo3ops4.png",
+      "stock": "ppp",
+      "brand": "ppp",
+      "description": "pppp",
+      "createdAt": "2025-02-15T09:47:59.474Z",
+      "updatedAt": "2025-02-17T12:31:37.326Z"
+    },
+    {
+      "id": "c322",
+      "title": "ooo",
+      "price": "68.99",
+      "category": "Beauty",
+      "image": "http://res.cloudinary.com/dqlnftw5r/image/upload/v1739612966/tailwind-vite-react-crud/i4flld3xmmgyyln1oanh.png",
+      "stock": "ppp",
+      "brand": "ppp",
+      "description": "ppp",
+      "createdAt": "2025-02-15T09:49:31.952Z",
+      "updatedAt": "2025-02-17T12:31:47.646Z"
+    },
+    {
+      "id": "e61a",
+      "title": "uuu",
+      "price": "55.99",
+      "category": "Books",
+      "image": "http://res.cloudinary.com/dqlnftw5r/image/upload/v1739613338/tailwind-vite-react-crud/bkzgdpir7gosruqqwiny.png",
+      "stock": "uuu",
+      "brand": "uuu",
+      "description": "uuuu",
+      "createdAt": "2025-02-15T09:55:45.555Z",
+      "updatedAt": "2025-02-17T12:31:57.243Z"
+    },
+    {
+      "id": "f27c",
+      "title": "yyypppp",
+      "price": "99.97",
+      "category": "Books",
+      "image": "http://res.cloudinary.com/dqlnftw5r/image/upload/v1739613469/tailwind-vite-react-crud/bcns5jqhg9exyk7l09vn.png",
+      "stock": "yyyy",
+      "brand": "yyy",
+      "description": "yyyy",
+      "createdAt": "2025-02-15T09:57:54.637Z",
+      "updatedAt": "2025-02-17T12:32:07.203Z"
+    }
+  ],
+  "orders": [
+    {
+      "id": "4f97",
+      "email": "atulprjpt@gmail.com",
+      "name": "Atul",
+      "orderedItems": [
+        {
+          "id": "9a3d",
+          "image": "http://res.cloudinary.com/dqlnftw5r/image/upload/v1739615797/tailwind-vite-react-crud/bjckaqp04gaph2c92y0h.png",
+          "title": "Product1234",
+          "price": "87",
+          "category": "Art & Craft",
+          "stock": 96,
+          "brand": "88",
+          "description": "lll",
+          "createdAt": "2025-02-14T13:21:13.213Z",
+          "updatedAt": "2025-02-20T07:35:43.128Z",
+          "qty": 1
+        },
+        {
+          "id": "828b",
+          "title": "p1",
+          "price": "77",
+          "category": "Fashion",
+          "image": "http://res.cloudinary.com/dqlnftw5r/image/upload/v1739599185/tailwind-vite-react-crud/p4y4lr2x4quzwfbgyf2d.png",
+          "stock": 22,
+          "brand": "abc",
+          "description": "good product",
+          "createdAt": "2025-02-15T05:59:53.372Z",
+          "qty": 1,
+          "updatedAt": "2025-02-20T07:48:55.498Z"
+        }
+      ],
+      "totalAmount": 164,
+      "shippingAddress": {
+        "fullname": "Atul Bharatbhai Prajapati",
+        "phone": "08128805368",
+        "email": "atulprjpt@gmail.com",
+        "addressline1": "B-102, Dharti Saket Radiance, near Science City circle, Bhadaj",
+        "city": "Ahmedabad",
+        "pincode": "380060",
+        "state": "Gujarat"
+      },
+      "paymentMode": "cod",
+      "orderStatus": "placed",
+      "paymentStatus": "unpaid",
+      "orderDate": "20/2/2025",
+      "orderTime": "1:21:36 pm",
+      "createdAt": "2025-02-20T07:51:36.784Z"
+    }
+  ]
+}
