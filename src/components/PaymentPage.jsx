@@ -58,7 +58,7 @@ export default function PaymentPage() {
             await placeOrder(orderDetails)
             toast.success('Order placed');
             await updateProductStock(cartItems);
-            await sendEmail(orderDetails);
+            // await sendEmail(orderDetails);
             setLoading(false);
             dispatch(EMPTY_CART());
             redirect('/thankyou');
