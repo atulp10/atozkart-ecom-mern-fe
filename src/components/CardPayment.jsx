@@ -48,8 +48,8 @@ export default function CardPayment({ cs }) {
 
                     await placeOrder(orderDetails)
                     toast.success('Order placed');
-                    await updateProductStock(cartItems);
-                    // await sendEmail(orderDetails);
+                    (process.env.NODE_ENV !== 'production') && await updateProductStock(cartItems);
+                    (process.env.NODE_ENV !== 'production') && await sendEmail(orderDetails);
                     setLoading(false);
                     dispatch(EMPTY_CART());
                     redirect('/thankyou');

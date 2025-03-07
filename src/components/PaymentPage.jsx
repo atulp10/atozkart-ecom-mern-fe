@@ -27,7 +27,7 @@ export default function PaymentPage() {
 
     const getClientSecret = async () => {
         try {
-            let res = await axios.post(`${import.meta.env.VITE_NODE_SERVER}/create-payment-intent`, { amount: total }, { withCredentials: true });            
+            let res = await axios.post(`${import.meta.env.VITE_NODE_SERVER}/create-payment-intent`, { amount: total }, { withCredentials: true });
             setClientSecret(res.data.clientSecret);
         }
         catch (err) { console.error(err.message) }
@@ -57,8 +57,8 @@ export default function PaymentPage() {
 
             await placeOrder(orderDetails)
             toast.success('Order placed');
-            await updateProductStock(cartItems);
-            // await sendEmail(orderDetails);
+            (process.env.NODE_ENV !== 'production') && await updateProductStock(cartItems);
+            (process.env.NODE_ENV !== 'production') && await sendEmail(orderDetails);
             setLoading(false);
             dispatch(EMPTY_CART());
             redirect('/thankyou');
