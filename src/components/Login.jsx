@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { FaAtlassian } from 'react-icons/fa';
 import { data, Link, useNavigate, useLocation } from 'react-router'
@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 
 const Login = () => {
 
+  const [loading,setLoading]=useState(false);
   const location = useLocation()
   const redirect = useNavigate()
   const { register, trigger, handleSubmit, getValues, formState: { errors }, setFocus } = useForm();
@@ -13,6 +14,7 @@ const Login = () => {
   useEffect(() => { setFocus('email') }, []);
 
   const loginUser = async () => {
+    setLoading(true);
     try {
       let { email, password } = getValues()
       let res = await fetch(`${import.meta.env.VITE_NODE_SERVER}/users/login`, {
@@ -38,6 +40,7 @@ const Login = () => {
 
       toast.success('You are logged in successfully!');
       sessionStorage.setItem('userin', JSON.stringify(data));
+      setLoading(false);
       if (data.role === "User") redirect(location.state?.path || "/");
       else if (data.role === "Admin") redirect('/admin');
     }
@@ -115,9 +118,13 @@ const Login = () => {
           <div>
             <button
               type="submit"
-              className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              className={`flex w-full justify-center rounded-md ${loading?'bg-indigo-300':'bg-indigo-600 hover:bg-indigo-500'}  px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs  `}
+              disabled={loading ? true : ''}
             >
-              Sign in
+              {loading? <>
+                <svg className=" inline size-5 animate-spin border-4 border-gray-100 border-t-gray-400 rounded-full" viewBox="0 0 24 24">
+                </svg>
+              </> : <>Sign in</>}
             </button>
           </div>
         </form>

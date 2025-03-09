@@ -35,7 +35,7 @@ export default function OrderStatus({ order }) {
                     orderDate: order.orderDate, orderTime: order.orderTime
                 }
 
-                await sendEmail(orderDetails);
+                (process.env.NODE_ENV !== 'production') && await sendEmail(orderDetails);
                 toast.success('Mail sent');
                 setLoading(false);
                 navigate('/admin/allorders');
