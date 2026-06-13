@@ -1,8 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { FaAtlassian } from 'react-icons/fa';
-import { data, Link, useNavigate, useLocation } from 'react-router'
+import { Link, useNavigate, useLocation } from 'react-router'
 import { toast } from 'react-toastify';
+import { storeUser } from '../utils/session';
+import { getErrorMessage } from '../api/client';
 
 const Login = () => {
 
@@ -11,7 +13,7 @@ const Login = () => {
   const redirect = useNavigate()
   const { register, trigger, handleSubmit, getValues, formState: { errors }, setFocus } = useForm();
 
-  useEffect(() => { setFocus('email') }, []);
+  useEffect(() => { setFocus('email') }, [setFocus]);
 
   const loginUser = async () => {
     setLoading(true);
@@ -39,14 +41,16 @@ const Login = () => {
       if (!data) throw new Error("Something went wrong");
 
       toast.success('You are logged in successfully!');
-      sessionStorage.setItem('userin', JSON.stringify(data));
-      setLoading(false);
-      if (data.role === "User") redirect(location.state?.path || "/");
+      storeUser(data);
+      const destination = location.state?.path;
+      if (data.role === "User") redirect(typeof destination === 'string' && destination.startsWith('/') && !destination.startsWith('//') ? destination : "/");
       else if (data.role === "Admin") redirect('/admin');
     }
     catch (err) {
-      console.log('Login error: ', err);
-      toast.error(err.message);
+      toast.error(getErrorMessage(err, 'Login failed'));
+    }
+    finally {
+      setLoading(false);
     }
   }
 
@@ -119,7 +123,7 @@ const Login = () => {
             <button
               type="submit"
               className={`flex w-full justify-center rounded-md ${loading?'bg-indigo-300':'bg-indigo-600 hover:bg-indigo-500'}  px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs  `}
-              disabled={loading ? true : ''}
+              disabled={loading}
             >
               {loading? <>
                 <svg className=" inline size-5 animate-spin border-4 border-gray-100 border-t-gray-400 rounded-full" viewBox="0 0 24 24">
@@ -130,7 +134,7 @@ const Login = () => {
         </form>
 
         <p className="mt-10 text-center text-sm/6 text-gray-500">
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <Link to="/register" className="font-semibold text-indigo-600 hover:text-indigo-500">
             Register
           </Link>

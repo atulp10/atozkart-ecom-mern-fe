@@ -5,8 +5,10 @@ import productSlice from "./productSlice";
 import checkoutSlice from "./checkoutSLice";
 import orderSlice from "./orderSlice";
 import favSlice from "./favSlice";
+import { loadState, saveState } from './persistence';
 
 const store=configureStore({
+    preloadedState: loadState(),
     reducer:{
         cart:cartSlice.reducer,
         filter:filterSlice.reducer,
@@ -16,5 +18,7 @@ const store=configureStore({
         fav:favSlice.reducer,
     }
 })
+
+store.subscribe(() => saveState(store.getState()));
 
 export default store

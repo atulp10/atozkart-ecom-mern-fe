@@ -1,23 +1,27 @@
-import React from 'react'
+import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 import { HiBars3 } from 'react-icons/hi2'
-import axios from 'axios';
+import { getErrorMessage, request } from '../../api/client';
+import { clearStoredUser } from '../../utils/session';
+import { useDispatch } from 'react-redux';
+import { CLEAR_FAV } from '../../redux/favSlice';
 
 export default function AdminNavbar({ bars, openSidebar }) {
 
   const redirect = useNavigate()
+  const dispatch = useDispatch();
 
   const handleLogout = async () => {
     try {
-      await axios.get(`${import.meta.env.VITE_NODE_SERVER}/users/logout`, { withCredentials: true });
-      sessionStorage.removeItem('userin');
+      await request({ url: '/users/logout', method: 'GET' });
+      clearStoredUser();
+      dispatch(CLEAR_FAV());
       toast.success('Logged out successfully');
       redirect('/');
     }
     catch (err) {
-      console.log(err);
-      toast.error(err.message);
+      toast.error(getErrorMessage(err, 'Failed to logout'));
     }
   }
 
@@ -36,3 +40,5 @@ export default function AdminNavbar({ bars, openSidebar }) {
     </div>
   )
 }
+
+AdminNavbar.propTypes = { bars: PropTypes.bool.isRequired, openSidebar: PropTypes.func.isRequired };

@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useNavigate, Link, useLoaderData } from 'react-router'
 
 import { Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
-import { Bars3Icon, BellIcon, ShoppingBagIcon, ShoppingCartIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { Bars3Icon, ShoppingBagIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { IoSearchOutline } from "react-icons/io5";
 import { toast } from 'react-toastify';
 import { ShowLoginRegister, ShowLogout } from './ShowHideLinks';
@@ -10,9 +10,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { selectCartItems } from '../redux/cartSlice';
 import { FaAtlassian } from "react-icons/fa";
 import { FILTER_BY_SEARCH } from '../redux/filterSlice';
-import { capitalizeFirstLetter } from '../capitalizeFirstLetter';
 import Footer from './Footer';
-import axios from 'axios';
+import { getErrorMessage, request } from '../api/client';
+import { clearStoredUser, getStoredUser } from '../utils/session';
+import { CLEAR_FAV } from '../redux/favSlice';
 
 
 const navigation = [
@@ -23,7 +24,7 @@ const navigation = [
 
 export default function Header() {
 
-    const [user, setUser] = useState({});
+    const [user, setUser] = useState(getStoredUser);
     const [search, setSearch] = useState('');
     const cartItems = useSelector(selectCartItems);
     const products = useLoaderData();
@@ -31,25 +32,29 @@ export default function Header() {
     const redirect = useNavigate();
 
     useEffect(() => {
-        if (sessionStorage.getItem('userin') !== null) {
-            setUser(JSON.parse(sessionStorage.getItem('userin')));
-        }
-    }, [sessionStorage.getItem('userin')]);
+        const syncUser = () => setUser(getStoredUser());
+        window.addEventListener('authchange', syncUser);
+        window.addEventListener('storage', syncUser);
+        return () => {
+            window.removeEventListener('authchange', syncUser);
+            window.removeEventListener('storage', syncUser);
+        };
+    }, []);
 
     useEffect(() => {
         dispatch(FILTER_BY_SEARCH({ products, search }))
-    }, [search])
+    }, [dispatch, products, search])
 
     const logOutUser = async () => {
         try {
-            let res = await axios.get(`${import.meta.env.VITE_NODE_SERVER}/users/logout`, { withCredentials: true });
-            sessionStorage.removeItem('userin');
+            await request({ url: '/users/logout', method: 'GET' });
+            clearStoredUser();
+            dispatch(CLEAR_FAV());
             toast.success('Logged out successfully');
             redirect('/');
         }
         catch (err) {
-            console.log('Logout error: ', err);
-            toast.error(err.message || 'Failed to logout');
+            toast.error(getErrorMessage(err, 'Failed to logout'));
         }
     }
 

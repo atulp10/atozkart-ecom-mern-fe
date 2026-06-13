@@ -1,8 +1,8 @@
-import React from 'react'
-import { Link, NavLink } from 'react-router'
-import { FaAd, FaHome } from "react-icons/fa";
+import PropTypes from 'prop-types';
+import { NavLink } from 'react-router'
+import { FaHome } from "react-icons/fa";
 import { IoAddCircleOutline } from 'react-icons/io5';
-import { AiOutlineClose, AiOutlineShoppingCart } from "react-icons/ai";
+import { AiOutlineClose } from "react-icons/ai";
 import { BiSolidShoppingBag } from "react-icons/bi";
 import { CiViewList } from "react-icons/ci";
 
@@ -39,3 +39,5 @@ export default function Sidebar({refProp,closeSidebar}) {
     </div>
   )
 }
+
+Sidebar.propTypes = { refProp: PropTypes.object.isRequired, closeSidebar: PropTypes.func.isRequired };

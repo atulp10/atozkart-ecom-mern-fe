@@ -1,4 +1,3 @@
-import React from 'react'
 import { FaAtlassian } from 'react-icons/fa';
 
 const Contact = () => {

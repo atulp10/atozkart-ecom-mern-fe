@@ -1,9 +1,12 @@
-import React from 'react'
-import { Navigate } from 'react-router'
-import { toast } from 'react-toastify'
+import PropTypes from 'prop-types';
+import { Navigate, useLocation } from 'react-router';
+import { useSelector } from 'react-redux';
+import { selectCartItems } from '../redux/cartSlice';
+import { selectDetails } from '../redux/checkoutSLice';
+import { getStoredUser } from '../utils/session';
 
 export const ShowLoginRegister = ({children}) => {
-    if(!sessionStorage.getItem('userin')){
+    if(!getStoredUser()){
   return (
     <div>
         {children}
@@ -12,7 +15,7 @@ export const ShowLoginRegister = ({children}) => {
 }}
 
 export const ShowLogout = ({ children }) => {
-    if (sessionStorage.getItem('userin')) {
+    if (getStoredUser()) {
         return (
             <div className='flex flex-wrap'>
                 {children}
@@ -22,48 +25,59 @@ export const ShowLogout = ({ children }) => {
 }
 
 export const Protected=({children})=>{
-    if(!sessionStorage.getItem('userin')){
-        toast.warning('You must login first');
-        return <Navigate to='/login' replace={true}></Navigate>
+    const location = useLocation();
+    if(!getStoredUser()){
+        return <Navigate to='/login' state={{ path: location.pathname }} replace />
     }
     else return children
 }
 
-// export const Protected = ({children})=>{
-//     if(sessionStorage.getItem("userin") !=null){
-//         let obj = JSON.parse(sessionStorage.userin)
-//         if(obj.isLoggedIn && obj.role=="User") return children
-//         else{
-//             toast.warning('You must login first');
-//             return <Navigate to='/login' replace={true}/> 
-//         } 
-//     }
-//     else return <Navigate to='/login' replace={true}/>
-// }
-
 export const ProtectedAdmin=({children})=>{
-    if(!sessionStorage.getItem('userin')){
-        toast.warning('You must login first');
-        return <Navigate to='/login' replace={true}></Navigate>
+    const user = getStoredUser();
+    if(!user){
+        return <Navigate to='/login' replace />
     }
-    else if((JSON.parse(sessionStorage.userin)).role!=='Admin'){
-        toast.error('Authorization failed');
-        return <Navigate to='/' replace={true}></Navigate>
+    else if(user.role!=='Admin'){
+        return <Navigate to='/' replace />
     }
     else
      return children
 }
 
 export const HideLoginIfUserLoggedIn=({children})=>{
-    if(sessionStorage.getItem('userin')){
-        toast.warning('You are already logged in');
-        if(JSON.parse(sessionStorage.userin).role==='User')
-            return <Navigate to='/' replace={true}></Navigate>
-        else if(JSON.parse(sessionStorage.userin).role==='Admin')
-            return <Navigate to='/admin' replace={true}></Navigate>
+    const user = getStoredUser();
+    if(user){
+        if(user.role==='User') return <Navigate to='/' replace />
+        if(user.role==='Admin') return <Navigate to='/admin' replace />
     }
     else
      return children;
 }
+
+export const CheckoutGuard = ({ children }) => {
+    const user = getStoredUser();
+    const cartItems = useSelector(selectCartItems);
+    if (!user) return <Navigate to="/login" state={{ path: '/cart' }} replace />;
+    if (cartItems.length === 0) return <Navigate to="/cart" replace />;
+    return children;
+};
+
+export const PaymentGuard = ({ children }) => {
+    const cartItems = useSelector(selectCartItems);
+    const details = useSelector(selectDetails);
+    if (!getStoredUser()) return <Navigate to="/login" replace />;
+    if (cartItems.length === 0) return <Navigate to="/cart" replace />;
+    if (!details) return <Navigate to="/checkout" replace />;
+    return children;
+};
+
+const childrenProp = { children: PropTypes.node.isRequired };
+ShowLoginRegister.propTypes = childrenProp;
+ShowLogout.propTypes = childrenProp;
+Protected.propTypes = childrenProp;
+ProtectedAdmin.propTypes = childrenProp;
+HideLoginIfUserLoggedIn.propTypes = childrenProp;
+CheckoutGuard.propTypes = childrenProp;
+PaymentGuard.propTypes = childrenProp;
 
 

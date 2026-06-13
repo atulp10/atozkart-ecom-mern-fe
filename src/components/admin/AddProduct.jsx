@@ -1,39 +1,37 @@
-import React, { useEffect, useState } from 'react'
-import { useNavigate, useOutletContext, useParams } from 'react-router';
-import { BarsContext } from './AdminLayout';
-import { useForm } from 'react-hook-form';
+import { useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router';
 import { toast } from 'react-toastify';
 import axios from "axios";
 import { getLocalProducts } from '../../getProductsData';
+import { getErrorMessage, request } from '../../api/client';
+import { validateProduct } from '../../utils/validation';
+
+const emptyProduct = { title: '', price: '', category: '', image: '', stock: '', brand: '', description: '' };
+const categories = ['Electronics', 'Fashion', 'Beauty', 'Home', 'Books', 'Grocery', 'Art & Craft'];
 
 export default function AddProduct() {
-
-  const obj = { title: '', price: '', category: '', image: '', stock: '', brand: '', description: '' };
-  const [product, setProduct] = useState({ ...obj });
+  const { id } = useParams();
+  const [product, setProduct] = useState(emptyProduct);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const { id } = useParams();
+  const [pageLoading, setPageLoading] = useState(Boolean(id));
   const navigate = useNavigate();
 
   useEffect(() => {
     if (id) {
       getLocalProducts()
         .then(data => {
-          let p = data.find(d => d._id === id);
-          setProduct(p);
+          const found = data.find(d => d._id === id);
+          if (!found) throw new Error('Product not found');
+          setProduct(found);
         })
-        .catch(err => toast.error(err.message))
+        .catch(err => { toast.error(getErrorMessage(err)); navigate('/admin/viewproducts', { replace: true }); })
+        .finally(() => setPageLoading(false));
     }
     else {
-      setProduct({ ...obj })
+      setProduct(emptyProduct)
     }
-  }, [])
-
-
-  const barsContext = BarsContext();
-  // console.log(barsContext);
-
-  const categories = ['Electronics', 'Fashion', 'Beauty', 'Home', 'Books', 'Grocery', 'Art & Craft']
+  }, [id, navigate])
 
   const handleImage = async (e) => {
     const img = e.target.files[0];
@@ -45,132 +43,41 @@ export default function AddProduct() {
       setLoading(true);
       const data = new FormData();
       data.append('file', img);
-      data.append('upload_preset', 'Project1');
-      data.append('folder', 'tailwind-vite-react-crud');
-      data.append('cloud_name', 'dqlnftw5r');
+      const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dqlnftw5r';
+      const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'Project1';
+      data.append('upload_preset', uploadPreset);
+      data.append('folder', 'atozkart');
       try {
-        let res = await axios.post('https://api.cloudinary.com/v1_1/dqlnftw5r/image/upload', data);
-        // console.log(res.data);
-        setProduct(prev => ({ ...prev, image: res.data.url }));
-        setLoading(false);
+        let res = await axios.post(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, data);
+        setProduct(prev => ({ ...prev, image: res.data.secure_url }));
       }
       catch (err) {
-        console.error('Image upload error: ', err);
-        toast.error(err.message)
+        toast.error(getErrorMessage(err, 'Image upload failed'))
+      }
+      finally {
+        setLoading(false);
       }
     }
   }
 
-// const handleImageOnServer=async (e)=>{
-//   const data=new FormData();
-//   for(const image of e.target.files){
-//     data.append('images',image);
-//   }
-//   data.append('a','atul');
-//   try{
-//     let res=await axios.post(`${import.meta.env.VITE_NODE_SERVER}/products/images`,data,{headers:{'Content-Type':'multipart/form-data'},withCredentials:true});
-//     console.log(res.data);
-//   }
-//   catch(err){
-//     console.log(err);
-    
-//   }
-  
-// }
-
-  const addProduct = async (p) => {
-    try {
-      let res = await fetch(`${import.meta.env.VITE_NODE_SERVER}/products`, {
-        method: 'post',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ ...p, createdAt: new Date() }),
-        credentials: 'include'
-      });
-
-      if (!res.ok) {
-        const errData = await res.text();
-        throw new Error(errData);
-      }
-
-      let data;
-      try {
-        data = await res.json();
-      } catch (jsonErr) {
-        throw new Error("Invalid server response");
-      }
-
-      if (!data) throw new Error("Something went wrong");
-
-      return data;
-
-    }
-    catch (err) {
-      console.error('Error in adding product: ', err);
-      throw err;
-    }
-  }
-
-  const updateProduct = async (p) => {
-    try {
-      let res = await fetch(`${import.meta.env.VITE_NODE_SERVER}/products/${id}`,
-        {
-          method: 'put',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ ...p, updatedAt: new Date() }),
-          credentials: 'include'
-        });
-
-      if (!res.ok) {
-        const errData = await res.text();
-        throw new Error(errData);
-      }
-
-      let data;
-      try {
-        data = await res.json();
-      } catch (jsonErr) {
-        throw new Error("Invalid server response");
-      }
-
-      if (!data) throw new Error("Something went wrong");
-
-      return data;
-
-    }
-    catch (err) {
-      console.error('Error in updating product: ', err);
-      throw err;
-    }
-  }
-
-  const handleSubmit = e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    let { title, price, category, image } = product;
-    if (!title || !price || !category || !image) {
-      toast.error('Title,Price,Category and Image are required')
-    }
-    else {
-      if (!id) {
-        addProduct(product)
-          .then(data => {
-            console.log(data);
-            toast.success('Product added successfully');
-            navigate('/admin/viewproducts');
-          })
-          .catch(err => toast.error(err.message))
-      }
-      else {
-        updateProduct(product)
-          .then(data => {
-            console.log(data);
-            toast.success('Product updated successfully');
-            navigate('/admin/viewproducts');
-          })
-          .catch(err => toast.error(err.message))
-      }
-
+    const result = validateProduct(product);
+    setErrors(result.errors);
+    if (!result.valid) return toast.error('Please correct the highlighted fields');
+    setLoading(true);
+    try {
+      await request({ url: id ? `/products/${id}` : '/products', method: id ? 'PUT' : 'POST', data: result.data });
+      toast.success(`Product ${id ? 'updated' : 'added'} successfully`);
+      navigate('/admin/viewproducts');
+    } catch (error) {
+      toast.error(getErrorMessage(error, `Unable to ${id ? 'update' : 'add'} product`));
+    } finally {
+      setLoading(false);
     }
   }
+
+  if (pageLoading) return <p className="p-6">Loading product...</p>;
 
   return (
     <div>
@@ -189,7 +96,7 @@ export default function AddProduct() {
             </div>
             <div className="flex-1 flex flex-col gap-y-1">
               <label htmlFor="price" className='pl-1'>Product Price</label>
-              <input type="text" name="price" id="price"
+              <input type="number" name="price" id="price" min="0.01" step="0.01"
                 className='w-full border-1 rounded-sm p-2 border-gray-300 focus:outline-blue-400'
                 value={product.price} onChange={e => setProduct({ ...product, price: e.target.value })}
               />
@@ -202,23 +109,22 @@ export default function AddProduct() {
               <label htmlFor="category" className='pl-1'>Product Category</label>
               <select
                 className='w-full border-1 rounded-sm p-2 border-gray-300 focus:outline-blue-400'
-                defaultValue=''
                 id='category'
                 value={product.category} onChange={e => setProduct({ ...product, category: e.target.value })}
               >
                 <option value='' name='category' disabled>Select a category</option>
-                {categories.map((cat, i) => <option key={i} value={cat} name='category'>{cat}</option>)}
+                {categories.map((cat) => <option key={cat} value={cat} name='category'>{cat}</option>)}
               </select>
               {errors.category && <span className='text-red-600'>{errors.category}</span>}
             </div>
             <div className="flex-1 flex flex-col gap-y-1">
               <label htmlFor="image" className='pl-1'>Product Image</label>
-              <input type="file" name="image" id="image" multiple
+              <input type="file" name="image" id="image" accept="image/jpeg,image/png,image/gif,image/webp"
                 className='w-full border-1 rounded-sm p-2 border-gray-300 focus:outline-blue-400'
                 onChange={handleImage}
               />
               {errors.image && <span className='text-red-600'>{errors.image}</span>}
-              {product.image && <img src={product.image} alt="" className=" mt-3 w-16 h-16 object-cover rounded" />
+              {product.image && <img src={product.image} alt="Product preview" className=" mt-3 w-16 h-16 object-cover rounded" />
               }
 
             </div>
@@ -226,7 +132,7 @@ export default function AddProduct() {
           <div className="flex max-[500px]:flex-col gap-4 mt-3">
             <div className="flex-1 flex flex-col gap-y-1">
               <label htmlFor="stock" className='pl-1'>Product Stock</label>
-              <input type="text" name="stock" id="stock"
+              <input type="number" name="stock" id="stock" min="0" step="1"
                 className='w-full border-1 rounded-sm p-2 border-gray-300 focus:outline-blue-400'
                 value={product.stock} onChange={e => setProduct({ ...product, stock: e.target.value })}
               />
@@ -247,6 +153,7 @@ export default function AddProduct() {
               <textarea
                 className='w-full border-1 rounded-sm p-2 border-gray-300 focus:outline-blue-400'
                 id='description'
+                maxLength={2000}
                 value={product.description} onChange={e => setProduct({ ...product, description: e.target.value })}
               />
             </div>
@@ -255,7 +162,7 @@ export default function AddProduct() {
             <button
               className={`px-4 py-3 flex-1 mt-3 rounded-sm bg-indigo-500 hover:bg-indigo-400  text-white`}
               type='submit'
-              disabled={loading ? true : ''}
+              disabled={loading}
             >
               {loading ? <>
                 <svg className="mr-3 inline size-5 animate-spin border-4 border-gray-100 border-t-gray-400 rounded-full" viewBox="0 0 24 24">

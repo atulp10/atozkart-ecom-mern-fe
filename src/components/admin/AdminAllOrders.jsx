@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { selectMyOrders, SET_MY_ORDERS } from '../../redux/orderSlice'
 import { getMyOrders } from '../../getProductsData';
@@ -11,10 +11,10 @@ export default function AdminAllOrders() {
     const dispatch = useDispatch();
 
     useEffect(() => {
-        getMyOrders(`${import.meta.env.VITE_NODE_SERVER}/orders`)
+        getMyOrders('/orders')
             .then(res => { dispatch(SET_MY_ORDERS(res)) })
             .catch(err => { toast.error(err.message) });
-    }, [])
+    }, [dispatch])
 
     return (
         <>
@@ -35,7 +35,7 @@ export default function AdminAllOrders() {
                     </thead>
                     <tbody>
                     {orders.length===0 && <tr><td colSpan='7' className='text-center'>No orders found</td></tr>}
-                        {orders.map((order, i) => <tr key={i}>
+                        {orders.map((order, i) => <tr key={order._id}>
                             <td className='px-6 py-3 text-left'>{i + 1}</td>
                             <td className='px-6 py-3 text-left'>{order._id}</td>
                             <td className='px-6 py-3 text-left'>${order.totalAmount}</td>
