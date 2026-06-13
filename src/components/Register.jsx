@@ -5,6 +5,7 @@ import { toast } from 'react-toastify'
 import { validateRegistration } from '../utils/validation';
 import { storeUser } from '../utils/session';
 import { getErrorMessage } from '../api/client';
+import { registerUser } from '../getProductsData';
 
 export default function Register() {
   const [user, setUser] = useState({ username: '', email: '', password: '', confpass: '' })
@@ -22,28 +23,7 @@ export default function Register() {
 
 
   const postUser = async (registration) => {
-      let res = await fetch(`${import.meta.env.VITE_NODE_SERVER}/users/register`, {
-        method: 'post',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ username: registration.username, email: registration.email, password: registration.password, role: 'User' }),
-        credentials: 'include'
-      });
-
-      if (!res.ok) {
-        let errData = await res.json();
-        throw new Error(errData.message);
-      }
-
-      let data;
-      try {
-        data = await res.json();
-      } catch (jsonErr) {
-        throw new Error("Invalid server response");
-      }
-
-      if (!data) throw new Error("No data received from server");
-
-      return data;
+      return registerUser(registration);
   }
 
   let handleSubmit = async (e) => {
