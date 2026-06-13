@@ -1,7 +1,7 @@
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import PropTypes from 'prop-types';
 import { useEffect, useState } from 'react'
-import ReactPaginate from 'react-paginate';
+import ReactPaginate from '../utils/reactPaginate';
 import { useDispatch, useSelector } from 'react-redux';
 import { ADD_TO_CART } from '../redux/cartSlice';
 import { FaHeart } from 'react-icons/fa';
