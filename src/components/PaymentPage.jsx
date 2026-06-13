@@ -1,116 +1,91 @@
-import React, { useEffect, useState } from 'react'
-import CheckoutSummary from './CheckoutSummary'
-import axios from 'axios';
+import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { EMPTY_CART, selectCartItems, selectTotal } from '../redux/cartSlice';
-import CardPayment from './CardPayment';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { toast } from 'react-toastify';
-import { placeOrder, sendEmail, updateProductStock } from '../getProductsData';
-import { selectDetails } from '../redux/checkoutSLice';
+import CheckoutSummary from './CheckoutSummary';
+import CardPayment from './CardPayment';
+import { EMPTY_CART, selectCartItems } from '../redux/cartSlice';
+import { CLEAR_DETAILS, selectDetails } from '../redux/checkoutSLice';
+import { placeOrder } from '../getProductsData';
+import { request, getErrorMessage } from '../api/client';
+import { getStoredUser } from '../utils/session';
+import { calculateOrderTotal } from '../utils/pricing';
+import { buildOrderDetails } from '../utils/orders';
 import { useNavigate } from 'react-router';
 
-const stripePromise = loadStripe(`${import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY}`);
+const stripePromise = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
+  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
+  : null;
 
 export default function PaymentPage() {
+  const [payMode, setPayMode] = useState('');
+  const [clientSecret, setClientSecret] = useState('');
+  const [loading, setLoading] = useState(false);
+  const cartItems = useSelector(selectCartItems);
+  const shippingAddress = useSelector(selectDetails);
+  const user = getStoredUser();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const totals = calculateOrderTotal(cartItems);
 
-    const [payMode, setPayMode] = useState('');
-    const [clientSecret, setClientSecret] = useState('');
-    const [loading, setLoading] = useState(false);
-    const total = useSelector(selectTotal);
-    const cartItems = useSelector(selectCartItems);
-    const user = JSON.parse(sessionStorage.getItem('userin'));
-    const shippingAddress = useSelector(selectDetails);
-    const redirect = useNavigate();
-    const dispatch = useDispatch();
-
-    const getClientSecret = async () => {
-        try {
-            let res = await axios.post(`${import.meta.env.VITE_NODE_SERVER}/create-payment-intent`, { amount: total }, { withCredentials: true });
-            setClientSecret(res.data.clientSecret);
-        }
-        catch (err) { console.error(err.message) }
+  const getClientSecret = useCallback(async () => {
+    try {
+      setClientSecret('');
+      const data = await request({ url: '/create-payment-intent', method: 'POST', data: { amount: totals.total } });
+      setClientSecret(data.clientSecret);
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Unable to initialize payment'));
     }
+  }, [totals.total]);
 
-    useEffect(() => {
-        if (payMode === 'online') {
-            getClientSecret();
-        }
-    }, [payMode]);
+  useEffect(() => {
+    if (payMode === 'online') getClientSecret();
+  }, [getClientSecret, payMode]);
 
-    const handlePlaceOrder = async () => {
-        try {
-            setLoading(true);
-            const itemAndQty = [];
+  const finishOrder = () => {
+    dispatch(EMPTY_CART());
+    dispatch(CLEAR_DETAILS());
+    navigate('/thankyou', { replace: true, state: { orderPlaced: true } });
+  };
 
-            for (let item of cartItems) {
-                itemAndQty.push({ itemId: item._id, title: item.title, image: item.image, price: item.price, qty: item.qty });
-            }
-
-            const orderDetails = {
-                email: user.email, name: user.username, orderedItems: itemAndQty, totalAmount: total,
-                shippingAddress, paymentMode: 'cod', orderStatus: 'placed', paymentStatus: 'unpaid',
-                orderDate: new Date().toLocaleDateString(), orderTime: new Date().toLocaleTimeString(),
-                createdAt: new Date()
-            }
-
-            await placeOrder(orderDetails)
-            toast.success('Order placed');
-            (process.env.NODE_ENV !== 'production') && await updateProductStock(cartItems);
-            (process.env.NODE_ENV !== 'production') && await sendEmail(orderDetails);
-            setLoading(false);
-            dispatch(EMPTY_CART());
-            redirect('/thankyou');
-        }
-        catch (err) {
-            toast.error(err.message);
-        }
+  const handlePlaceOrder = async () => {
+    if (loading || !user || !shippingAddress || cartItems.length === 0) return;
+    setLoading(true);
+    try {
+      const order = buildOrderDetails({ cartItems, user, shippingAddress, paymentMode: 'cod', paymentStatus: 'unpaid' });
+      await placeOrder(order);
+      toast.success('Order placed');
+      finishOrder();
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Unable to place order'));
+    } finally {
+      setLoading(false);
     }
+  };
 
-    return (
-        <>
-            <Elements stripe={stripePromise}>
-                <div className="bg-white flex flex-col gap-5 mx-auto md:flex-row sm:mt-2 sm:px-6 lg:max-w-7xl lg:px-8">
-                    <div className="shadow-xl p-3 sm:p-8 m-1 rounded-2xl flex-1">
-                        <h2 className="text-2xl text-gray-900 mb-2">Payments</h2>
-                        <hr className='text-gray-400' />
-
-                        <div className="mt-5">
-                            <div>Select mode of payment:</div>
-                            <fieldset className='border-1 border-gray-400 rounded-sm p-2 mt-2'>
-                                <input type="radio" name="paymode" id="cod" onClick={() => setPayMode('cod')} value='cod' />
-                                <label htmlFor="cod" className='ml-1'>Cash On Delivery</label>
-                                <br />
-                                <input type="radio" name="paymode" id="online" onClick={() => setPayMode('online')} value='online' />
-                                <label htmlFor="online" className='ml-1'>Online</label>
-                                <br />
-                                {(clientSecret !== '' && payMode === 'online') &&
-                                    <CardPayment cs={clientSecret} />
-                                }
-                            </fieldset>
-
-                            {(payMode === 'cod') &&
-                                <div className="mt-3">
-                                    <button
-                                        className={`w-full py-3 rounded-sm ${loading ? 'bg-indigo-300' : 'bg-indigo-500 hover:bg-indigo-400'} text-white cursor-pointer`}
-                                        disabled={loading ? true : ''}
-                                        onClick={handlePlaceOrder}
-                                    >
-                                        {loading ? <>
-                                            <svg class="mr-3 inline size-5 animate-spin border-4 border-gray-100 border-t-gray-400 rounded-full" viewBox="0 0 24 24">
-                                            </svg>
-                                            Processing…
-                                        </> : <> Place Order</>}
-                                    </button>
-                                </div>
-                            }
-                        </div>
-                    </div>
-                    <CheckoutSummary />
-                </div>
-            </Elements>
-
-        </>
-    )
+  return (
+    <Elements stripe={stripePromise}>
+      <div className="bg-white flex flex-col gap-5 mx-auto md:flex-row sm:mt-2 sm:px-6 lg:max-w-7xl lg:px-8">
+        <section className="shadow-xl p-3 sm:p-8 m-1 rounded-2xl flex-1">
+          <h2 className="text-2xl text-gray-900 mb-2">Payment</h2>
+          <hr className="text-gray-400" />
+          <fieldset className="border border-gray-400 rounded-sm p-3 mt-5">
+            <legend className="px-1">Select payment method</legend>
+            <label className="block"><input type="radio" name="paymode" checked={payMode === 'cod'} onChange={() => setPayMode('cod')} /> Cash on delivery</label>
+            <label className="block mt-2"><input type="radio" name="paymode" checked={payMode === 'online'} onChange={() => setPayMode('online')} /> Online payment</label>
+            {payMode === 'online' && !stripePromise && <p className="text-red-600 mt-3">Online payment is not configured.</p>}
+            {payMode === 'online' && stripePromise && !clientSecret && <p className="mt-3">Initializing secure payment...</p>}
+            {payMode === 'online' && clientSecret && <CardPayment clientSecret={clientSecret} onSuccess={finishOrder} />}
+          </fieldset>
+          {payMode === 'cod' && (
+            <button type="button" className="w-full mt-3 py-3 rounded-sm bg-indigo-500 hover:bg-indigo-400 disabled:bg-indigo-300 text-white" disabled={loading} onClick={handlePlaceOrder}>
+              {loading ? 'Processing...' : 'Place order'}
+            </button>
+          )}
+        </section>
+        <CheckoutSummary />
+      </div>
+    </Elements>
+  );
 }

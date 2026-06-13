@@ -1,7 +1,8 @@
-import React from 'react'
-import { Link } from 'react-router'
+import { Link, Navigate, useLocation } from 'react-router'
 
 export default function ThankYouPage() {
+  const location = useLocation();
+  if (!location.state?.orderPlaced) return <Navigate to="/products" replace />;
   return (
     <div className='flex flex-col justify-center items-center text-3xl mt-10'>
       <h2>Thank you for your order.</h2>

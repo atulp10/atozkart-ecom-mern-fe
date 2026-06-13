@@ -1,5 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
+import { calculateSubtotal } from '../utils/pricing';
 
 const cartSlice = createSlice({
     name: 'cart',
@@ -9,10 +10,11 @@ const cartSlice = createSlice({
     },
     reducers: {
         ADD_TO_CART(state,action){
-            // console.log('addtocart called');
-            // console.log(action);
             let idx=state.cartItems.findIndex(item=>item._id===action.payload._id);
-            if(idx===-1){
+            if (Number(action.payload.stock) <= 0) {
+                toast.error('This product is out of stock');
+            }
+            else if(idx===-1){
                 state.cartItems.push({...action.payload,qty:1});
                 toast.success('Added to cart');
             } 
@@ -20,21 +22,18 @@ const cartSlice = createSlice({
             
             
         },
-        CALCULATE_TOTAL(state,action){
-            let t=0;
-            for(let item of state.cartItems){
-                t+=(item.price*item.qty)
-            }
-            state.total=t;
+        CALCULATE_TOTAL(state){
+            state.total=calculateSubtotal(state.cartItems);
         },
 
         REMOVE_FROM_CART(state,action){
             state.cartItems= state.cartItems.filter(item=>item._id!==action.payload);
-            
+            state.total=calculateSubtotal(state.cartItems);
         },
 
-        EMPTY_CART(state,action){
+        EMPTY_CART(state){
             state.cartItems=[]
+            state.total=0
         },
         INCREASE(state,action){
             let item=action.payload
@@ -42,6 +41,7 @@ const cartSlice = createSlice({
             if(idx!==-1){
                 if(item.qty<item.stock)
                 state.cartItems[idx].qty++;
+                state.total=calculateSubtotal(state.cartItems);
             }
             
         },
@@ -52,6 +52,7 @@ const cartSlice = createSlice({
             if(idx!==-1){
                 if(item.qty>1)
                 state.cartItems[idx].qty--;
+                state.total=calculateSubtotal(state.cartItems);
             }
         }
 

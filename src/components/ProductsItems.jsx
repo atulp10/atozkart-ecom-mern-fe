@@ -1,24 +1,30 @@
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
-import React, { act, useEffect, useState } from 'react'
+import PropTypes from 'prop-types';
+import { useEffect, useState } from 'react'
 import ReactPaginate from 'react-paginate';
 import { useDispatch, useSelector } from 'react-redux';
-import { ADD_TO_CART, selectCartItems } from '../redux/cartSlice';
+import { ADD_TO_CART } from '../redux/cartSlice';
 import { FaHeart } from 'react-icons/fa';
 import { CiHeart } from 'react-icons/ci';
 import { ADD_TO_FAV, REMOVE_FROM_FAV, selectFavProducts } from '../redux/favSlice';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router';
+import { getStoredUser } from '../utils/session';
 
 export default function ProductsItems({ products }) {
 
     const dispatch = useDispatch();
     const favProducts = useSelector(selectFavProducts);
-    const user = JSON.parse(sessionStorage.getItem('userin'));
+    const user = getStoredUser();
     const navigate=useNavigate();
     //Pagination
     const [itemOffset, setItemOffset] = useState(0);
     const [currentItems, setCurrentItems] = useState([]);
     const [pageCount, setPageCount] = useState(0)
+
+    useEffect(() => {
+        setItemOffset(0);
+    }, [products]);
 
     useEffect(() => {
         const endOffset = itemOffset + 4;
@@ -27,8 +33,7 @@ export default function ProductsItems({ products }) {
     }, [itemOffset, products])
 
     const handlePageClick = (event) => {
-        // console.log(event);
-        const newOffset = (event.selected * 4) % products.length;
+        const newOffset = event.selected * 4;
         setItemOffset(newOffset);
     }
 
@@ -57,6 +62,7 @@ export default function ProductsItems({ products }) {
                     <div key={product._id} className="relative border-1 rounded-xl text-gray-300 p-2 cursor-pointer" onClick={()=>navigate(`/products/${product._id}`)}>
                         <img
                             src={product.image}
+                            alt={product.title}
                             className="aspect-square w-full rounded-md bg-gray-200 object-cover group-hover:opacity-75 lg:aspect-auto lg:h-80"
                         />
                         <div className="mt-4 flex justify-between px-1">
@@ -73,10 +79,10 @@ export default function ProductsItems({ products }) {
                         </div>
 
                         <div className='flex justify-between items-center'>
-                            <button className="relative bg-indigo-500 hover:bg-indigo-400 block border-0 px-6 py-2 mt-2 text-white rounded-lg cursor-pointer"
+                            <button disabled={Number(product.stock) <= 0} className="relative bg-indigo-500 hover:bg-indigo-400 disabled:bg-gray-400 block border-0 px-6 py-2 mt-2 text-white rounded-lg cursor-pointer"
                                 // onClick={() => dispatch(ADD_TO_CART(product))}>
                                 onClick={(e) => handleAddToCart(e,product)}>
-                                    Add to cart
+                                    {Number(product.stock) > 0 ? 'Add to cart' : 'Out of stock'}
                             </button>
                             <div>
                                 {(favProducts.findIndex(p => p._id === product._id) !== -1) ?
@@ -105,7 +111,7 @@ export default function ProductsItems({ products }) {
                     onPageChange={handlePageClick}
                     pageRangeDisplayed={5}
                     pageCount={pageCount}
-                    initialPage={0}
+                    forcePage={Math.floor(itemOffset / 4)}
                     previousLabel={<ChevronLeftIcon className="size-5" />}
                     renderOnZeroPageCount={null}
                     pageLinkClassName='cursor-pointer relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-gray-300 ring-inset hover:bg-gray-200 focus:z-20 focus:outline-offset-0'
@@ -120,3 +126,5 @@ export default function ProductsItems({ products }) {
 
     )
 }
+
+ProductsItems.propTypes = { products: PropTypes.arrayOf(PropTypes.object).isRequired };

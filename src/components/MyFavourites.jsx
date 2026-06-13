@@ -1,4 +1,3 @@
-import React from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { ADD_TO_FAV, REMOVE_FROM_FAV, selectFavProducts } from '../redux/favSlice'
 import { ADD_TO_CART } from '../redux/cartSlice';
@@ -22,6 +21,7 @@ export default function MyFavourites() {
                             <div key={product._id} className="relative border-1 rounded-xl text-gray-300 p-2" >
                                 <img
                                     src={product.image}
+                                    alt={product.title}
                                     className="aspect-square w-full rounded-md bg-gray-200 object-cover group-hover:opacity-75 lg:aspect-auto lg:h-80"
                                 />
                                 <div className="mt-4 flex justify-between px-1">
@@ -42,7 +42,7 @@ export default function MyFavourites() {
                                         onClick={() => dispatch(ADD_TO_CART(product))}>Add to cart
                                     </button>
                                     <div>
-                                        {(favProducts.findIndex(p => p.id === product.id) !== -1) ?
+                                        {(favProducts.findIndex(p => p._id === product._id) !== -1) ?
                                             <FaHeart
                                                 className='size-5 mr-1 relative text-red-700 '
                                                 onClick={() => dispatch(REMOVE_FROM_FAV(product))}

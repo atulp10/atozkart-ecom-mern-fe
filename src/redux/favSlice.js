@@ -30,10 +30,13 @@ const favSlice = createSlice({
                     toast.success('Product removed from Favourites');
                 }
             }
+        },
+        CLEAR_FAV(state){
+            state.favProducts=[];
         }
     }
 })
 
 export default favSlice;
-export const { ADD_TO_FAV,REMOVE_FROM_FAV } = favSlice.actions;
+export const { ADD_TO_FAV,REMOVE_FROM_FAV,CLEAR_FAV } = favSlice.actions;
 export const selectFavProducts = state => state.fav.favProducts;

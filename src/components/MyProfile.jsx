@@ -1,24 +1,27 @@
-import axios from 'axios';
-import React from 'react'
 import { Link, useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 import { HiArrowLongRight } from "react-icons/hi2";
+import { getErrorMessage, request } from '../api/client';
+import { clearStoredUser, getStoredUser } from '../utils/session';
+import { useDispatch } from 'react-redux';
+import { CLEAR_FAV } from '../redux/favSlice';
 
 export default function MyProfile() {
 
-    const user = JSON.parse(sessionStorage.getItem('userin'));
+    const user = getStoredUser();
     const redirect = useNavigate();
+    const dispatch = useDispatch();
 
     const logOutUser = async () => {
         try {
-            let res = await axios.get(`${import.meta.env.VITE_NODE_SERVER}/users/logout`, { withCredentials: true });
-            sessionStorage.removeItem('userin');
+            await request({ url: '/users/logout', method: 'GET' });
+            clearStoredUser();
+            dispatch(CLEAR_FAV());
             toast.success('Logged out successfully');
             redirect('/');
         }
         catch (err) {
-            console.log('Logout error: ', err);
-            toast.error(err.message || 'Failed to logout');
+            toast.error(getErrorMessage(err, 'Failed to logout'));
         }
     }
 

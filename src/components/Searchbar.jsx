@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react'
+import PropTypes from 'prop-types';
+import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux';
 import { FILTER_BY_SEARCH } from '../redux/filterSlice';
 import { IoSearchOutline } from 'react-icons/io5';
@@ -9,7 +10,7 @@ export default function Searchbar({ products }) {
 
     useEffect(() => {
         dispatch(FILTER_BY_SEARCH({ products, search }))
-    }, [search])
+    }, [dispatch, products, search])
 
     return (
         <>
@@ -22,3 +23,5 @@ export default function Searchbar({ products }) {
         </>
     )
 }
+
+Searchbar.propTypes = { products: PropTypes.arrayOf(PropTypes.object).isRequired };

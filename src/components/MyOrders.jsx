@@ -1,29 +1,32 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { getMyOrders } from '../getProductsData'
 import { toast } from 'react-toastify';
 import { Link, useNavigate } from 'react-router';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectMyOrders, SET_MY_ORDERS } from '../redux/orderSlice';
-import { MdKeyboardArrowRight } from "react-icons/md";
 import { IoMdArrowDropright } from "react-icons/io";
+import { clearStoredUser, getStoredUser } from '../utils/session';
+import { getErrorMessage } from '../api/client';
 
 export default function MyOrders() {
-    const user = JSON.parse(sessionStorage.getItem('userin'));
+    const user = getStoredUser();
     const dispatch = useDispatch();
     const orders = useSelector(selectMyOrders);
     const navigate=useNavigate();
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        getMyOrders(`${import.meta.env.VITE_NODE_SERVER}/orders?email=${user.email}`)
+        getMyOrders(`/orders?email=${encodeURIComponent(user.email)}`)
             .then(res => { dispatch(SET_MY_ORDERS(res)) })
             .catch(err =>{
-                if(err.status === 401){
-                    sessionStorage.removeItem('userin');
+                if(err.response?.status === 401){
+                    clearStoredUser();
                     navigate('/login');
                 }
-                toast.error(err.message);
-            } )
-    }, [])
+                toast.error(getErrorMessage(err, 'Unable to load orders'));
+            })
+            .finally(() => setLoading(false));
+    }, [dispatch, navigate, user.email])
 
     return (
         <>
@@ -59,11 +62,13 @@ export default function MyOrders() {
                     </tbody>
                 </table> */}
 
-                {orders.map((order, i) => (
-                    order.orderedItems.map((item, j) => (
-                        <div className="flex p-1 mt-2 bg-gray-100 sm:w-1/2" key={item.itemId}>
+                {loading && <p>Loading orders...</p>}
+                {!loading && orders.length === 0 && <p>No orders found.</p>}
+                {orders.map((order) => (
+                    order.orderedItems.map((item) => (
+                        <div className="flex p-1 mt-2 bg-gray-100 sm:w-1/2" key={`${order._id}-${item.itemId}`}>
                             <div className="flex-1">
-                                <img src={item.image} className='p-1' style={{}} alt="" />
+                                <img src={item.image} className='p-1' alt={item.title} />
                             </div>
                             <div className="flex-2 flex justify-between ">
                                 <div className="text-sm pl-2">

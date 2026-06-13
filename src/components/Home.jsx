@@ -1,8 +1,7 @@
-import React from 'react'
 import { FaAtlassian } from "react-icons/fa";
 import { HiArrowLongRight } from 'react-icons/hi2';
 import { Link } from 'react-router';
-import { ShowLoginRegister, ShowLogout } from './ShowHideLinks';
+import { ShowLoginRegister } from './ShowHideLinks';
 
 export default function Home() {
   return (

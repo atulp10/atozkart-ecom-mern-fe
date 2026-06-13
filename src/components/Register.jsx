@@ -1,59 +1,31 @@
-import React, { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { FaAtlassian } from 'react-icons/fa'
 import { Link, useNavigate } from 'react-router'
 import { toast } from 'react-toastify'
+import { validateRegistration } from '../utils/validation';
+import { storeUser } from '../utils/session';
+import { getErrorMessage } from '../api/client';
 
 export default function Register() {
   const [user, setUser] = useState({ username: '', email: '', password: '', confpass: '' })
   const [errors, setErrors] = useState({})
+  const [loading, setLoading] = useState(false);
   const usernameRef = useRef();
   const navigate = useNavigate()
 
   useEffect(() => { usernameRef.current.focus() }, [])
 
-  const checkUsername = () => {
-    if (user.username === '') {
-      setErrors(prev => ({ ...prev, username: 'Username is required' })); return false
-    }
-    else {
-      setErrors(prev => ({ ...prev, username: '' })); return true
-    }
-  }
-
-  const checkEmail = () => {
-    if (user.email === '') {
-      setErrors(prev => ({ ...prev, email: 'Email is required' })); return false
-    }
-    else {
-      setErrors(prev => ({ ...prev, email: '' })); return true
-    }
-  }
-
-  const checkPassword = () => {
-    if (user.password === '') {
-      setErrors(prev => ({ ...prev, password: 'Password is required' })); return false
-    }
-    else {
-      setErrors(prev => ({ ...prev, password: '' })); return true
-    }
-  }
-
-  const checkConfPass = () => {
-    if (user.confpass !== user.password || !user.password) {
-      setErrors(prev => ({ ...prev, confpass: 'Password does not match' })); return false
-    }
-    else {
-      setErrors(prev => ({ ...prev, confpass: '' })); return true
-    }
-  }
+  const validateField = (field) => {
+    const result = validateRegistration(user);
+    setErrors((current) => ({ ...current, [field]: result.errors[field] || '' }));
+  };
 
 
-  const postUser = async () => {
-    try {
+  const postUser = async (registration) => {
       let res = await fetch(`${import.meta.env.VITE_NODE_SERVER}/users/register`, {
         method: 'post',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ ...user, createdAt: new Date(), role: 'User' }),
+        body: JSON.stringify({ username: registration.username, email: registration.email, password: registration.password, role: 'User' }),
         credentials: 'include'
       });
 
@@ -72,31 +44,26 @@ export default function Register() {
       if (!data) throw new Error("No data received from server");
 
       return data;
-    }
-    catch (err) {
-      console.error('Error in user registration: ', err);
-      throw err;
-    }
-
   }
 
   let handleSubmit = async (e) => {
     e.preventDefault();
-    let u = checkUsername()
-    let em = checkEmail()
-    let p = checkPassword()
-    let cp = checkConfPass()
-
-    if (!u || !em || !p || !cp) toast.error('Missing Credentials');
+    const result = validateRegistration(user);
+    setErrors(result.errors);
+    if (!result.valid) toast.error('Please correct the highlighted fields');
     else {
+      setLoading(true);
       try {
-        const res = await postUser();
-        sessionStorage.setItem('userin', JSON.stringify(res));
+        const res = await postUser(result.data);
+        storeUser(res);
         toast.success('Registration Successful');
         navigate('/');
       }
       catch (err) {
-        toast.error(err.message);
+        toast.error(getErrorMessage(err, 'Registration failed'));
+      }
+      finally {
+        setLoading(false);
       }
     }
   }
@@ -125,11 +92,13 @@ export default function Register() {
               <input
                 id="username"
                 name="username"
-                type="username"
+                type="text"
                 ref={usernameRef}
                 value={user.username}
                 onChange={(e) => setUser({ ...user, username: e.target.value })}
-                onBlur={checkUsername}
+                onBlur={() => validateField('username')}
+                minLength={3}
+                maxLength={30}
                 required
                 autoComplete="username"
                 className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
@@ -149,7 +118,7 @@ export default function Register() {
                 type="email"
                 value={user.email}
                 onChange={(e) => setUser({ ...user, email: e.target.value })}
-                onBlur={checkEmail}
+                onBlur={() => validateField('email')}
                 required
                 autoComplete="email"
                 className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
@@ -176,9 +145,10 @@ export default function Register() {
                 type="password"
                 value={user.password}
                 onChange={(e) => setUser({ ...user, password: e.target.value })}
-                onBlur={checkPassword}
+                onBlur={() => validateField('password')}
+                minLength={8}
                 required
-                autoComplete="current-password"
+                autoComplete="new-password"
                 className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
               />
             </div>
@@ -194,12 +164,12 @@ export default function Register() {
               <input
                 id="confpass"
                 name="confpass"
-                type="confpass"
+                type="password"
                 value={user.confpass}
                 onChange={(e) => setUser({ ...user, confpass: e.target.value })}
-                onBlur={checkConfPass}
+                onBlur={() => validateField('confpass')}
                 required
-                autoComplete="confpass"
+                autoComplete="new-password"
                 className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
               />
             </div>
@@ -209,9 +179,10 @@ export default function Register() {
           <div>
             <button
               type="submit"
-              className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              disabled={loading}
+              className="flex w-full justify-center rounded-md bg-indigo-600 disabled:bg-indigo-300 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             >
-              Sign up
+              {loading ? 'Creating account...' : 'Sign up'}
             </button>
           </div>
         </form>

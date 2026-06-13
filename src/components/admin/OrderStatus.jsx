@@ -1,72 +1,53 @@
-import React, { useState } from 'react'
+import PropTypes from 'prop-types';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
-import { sendEmail } from '../../getProductsData';
+import { getErrorMessage, request } from '../../api/client';
+
+const transitions = {
+  placed: ['confirmed', 'cancelled'],
+  confirmed: ['shipped', 'cancelled'],
+  shipped: ['outfordelivery'],
+  outfordelivery: ['delivered'],
+  delivered: [],
+  cancelled: [],
+};
 
 export default function OrderStatus({ order }) {
+  const allowed = transitions[order.orderStatus] || [];
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState('');
+  const navigate = useNavigate();
 
-    const [loading, setLoading] = useState(false);
-    const [status, setStatus] = useState(order.orderStatus);
-    const navigate = useNavigate();
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (window.confirm('Are you sure?')) {
-            try {
-                setLoading(true);
-
-                const res = await fetch(`${import.meta.env.VITE_NODE_SERVER}/orders/${order._id}`, {
-                    method: 'put',
-                    headers: { 'content-type': 'application/json' },
-                    body: JSON.stringify({ ...order, orderStatus: status, updatedAt: new Date() }),
-                    credentials: 'include'
-                })
-
-                if (!res.ok) {
-                    const errData = await res.text();
-                    throw new Error(errData);
-                }
-
-                toast.success('Order updated');
-
-                const orderDetails = {
-                    email: order.email, name: order.name, orderedItems: order.orderedItems, totalAmount: order.totalAmount,
-                    shippingAddress: order.shippingAddress, paymentMode: order.paymentMode, orderStatus: status, paymentStatus: order.paymentStatus,
-                    orderDate: order.orderDate, orderTime: order.orderTime
-                }
-
-                (process.env.NODE_ENV !== 'production') && await sendEmail(orderDetails);
-                toast.success('Mail sent');
-                setLoading(false);
-                navigate('/admin/allorders');
-            }
-            catch (err) {
-                setLoading(false);
-                console.error('Error updating order: ',err);
-                toast.error(err.message);
-            }
-        }
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!status || loading) return;
+    setLoading(true);
+    try {
+      await request({ url: `/orders/${order._id}`, method: 'PUT', data: { orderStatus: status } });
+      toast.success('Order status updated');
+      navigate('/admin/allorders');
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Unable to update order'));
+    } finally {
+      setLoading(false);
     }
+  };
 
-    return (
-        <>
-            <select name="orderstatus" id="orderstatus" value={status} className='' onChange={(e) => setStatus(e.target.value)}>
-                <option value="" disabled>Update Status</option>
-                <option value="placed">Placed</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="shipped">Shipped</option>
-                <option value="outfordelivery">Out For Delivery</option>
-                <option value="delivered">Delivered</option>
-                <option value="cancelled">Cancelled</option>
-            </select>
-            <form action="" className='' onSubmit={handleSubmit}>
-                <button className={`px-3 py-0.5 ${loading ? 'bg-green-200' : 'bg-green-600 hover:bg-green-500'}  rounded-md text-white`} disabled={loading ? 'true' : ''}>Update</button>
-            </form>
-            {loading && <div className='flex items-center'>
-                <svg class="mr-1 size-5 animate-spin border-4 border-gray-400 border-t-gray-300 rounded-full" viewBox="0 0 24 24">
-                </svg>
-                Processing…
-            </div>}
-        </>
-    )
+  if (allowed.length === 0) return <span>No further status changes available</span>;
+
+  return (
+    <form className="flex gap-2" onSubmit={handleSubmit}>
+      <label className="sr-only" htmlFor="orderstatus">New order status</label>
+      <select id="orderstatus" value={status} onChange={(event) => setStatus(event.target.value)}>
+        <option value="" disabled>Select status</option>
+        {allowed.map((value) => <option key={value} value={value}>{value}</option>)}
+      </select>
+      <button className="px-3 py-0.5 bg-green-600 hover:bg-green-500 disabled:bg-gray-400 rounded-md text-white" disabled={loading || !status}>
+        {loading ? 'Updating...' : 'Update'}
+      </button>
+    </form>
+  );
 }
+
+OrderStatus.propTypes = { order: PropTypes.object.isRequired };

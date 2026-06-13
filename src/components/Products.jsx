@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useLoaderData } from 'react-router';
-import { FILTER_BY_CATEGORY, PRICE_FITER, selectCatVal, selectFilterProducts, selectPriceFilterVal, selectSearchVal } from '../redux/filterSlice';
+import { FILTER_BY_CATEGORY, PRICE_FITER, RESET_FILTERS, selectCatVal, selectFilterProducts, selectPriceFilterVal, selectSearchVal } from '../redux/filterSlice';
 import ProductsItems from './ProductsItems';
 import { capitalizeFirstLetter } from '../capitalizeFirstLetter';
 import Searchbar from './Searchbar';
@@ -30,9 +30,15 @@ export default function Products() {
     const dispatch = useDispatch();
     const [filter, setFilter] = useState(false);
 
-    useEffect(() => { dispatch(PRICE_FITER({ priceFilter, products })) }, [priceFilter])
+    useEffect(() => { dispatch(PRICE_FITER({ priceFilter, products })) }, [dispatch, priceFilter, products])
 
-    useEffect(() => { dispatch(FILTER_BY_CATEGORY({ selectedCategory, products })) }, [selectedCategory]);
+    useEffect(() => { dispatch(FILTER_BY_CATEGORY({ selectedCategory, products })) }, [dispatch, selectedCategory, products]);
+
+    const clearFilters = () => {
+        setPriceFilter('');
+        setSelectedCategory('');
+        dispatch(RESET_FILTERS(products));
+    };
 
     return (
         <>
@@ -57,11 +63,11 @@ export default function Products() {
                     <div>
                         <div className='text-gray-500 mb-1'>Filter by Categories</div>
                         <hr className='text-gray-300' />
-                        {categories.map((c, i) =>
-                            <div key={i} className='my-0.5 pl-1'>
-                                <input type="radio" name="categories" id={`category-${i}`} value={c} onClick={e => setSelectedCategory(e.target.value)}
+                        {categories.map((c) =>
+                            <div key={c} className='my-0.5 pl-1'>
+                                <input type="radio" name="mobile-categories" id={`mobile-category-${c}`} value={c} checked={selectedCategory === c} onChange={e => setSelectedCategory(e.target.value)}
                                     className='me-1' />
-                                <label htmlFor={`category-${i}`} className='text-gray-600'>{capitalizeFirstLetter(c)}</label>
+                                <label htmlFor={`mobile-category-${c}`} className='text-gray-600'>{capitalizeFirstLetter(c)}</label>
                             </div>
                         )}
                     </div>
@@ -71,13 +77,13 @@ export default function Products() {
 
                         <div className='my-0.5 pl-1'>
                             <input type="radio" name="pricefilter" id='hightolow'
-                                onClick={() => setPriceFilter('hightolow')}
+                                checked={priceFilter === 'hightolow'} onChange={() => setPriceFilter('hightolow')}
                                 className='me-1' />
                             <label htmlFor='hightolow' className='text-gray-600'>High to Low</label>
                         </div>
                         <div className='my-0.5 pl-1'>
                             <input type="radio" name="pricefilter" id='lowtohigh'
-                                onClick={() => setPriceFilter('lowtohigh')}
+                                checked={priceFilter === 'lowtohigh'} onChange={() => setPriceFilter('lowtohigh')}
                                 className='me-1' />
                             <label htmlFor='lowtohigh' className='text-gray-600'>Low to High</label>
                         </div>
@@ -94,11 +100,11 @@ export default function Products() {
                             <div>
                                 <div className='text-gray-500 mb-1'>Filter by Categories</div>
                                 <hr className='text-gray-300' />
-                                {categories.map((c, i) =>
-                                    <div key={i} className='my-0.5 pl-1'>
-                                        <input type="radio" name="categories" id={`category-${i}`} value={c} onClick={e => setSelectedCategory(e.target.value)}
+                                {categories.map((c) =>
+                                    <div key={c} className='my-0.5 pl-1'>
+                                        <input type="radio" name="desktop-categories" id={`desktop-category-${c}`} value={c} checked={selectedCategory === c} onChange={e => setSelectedCategory(e.target.value)}
                                             className='me-1' />
-                                        <label htmlFor={`category-${i}`} className='text-gray-600'>{capitalizeFirstLetter(c)}</label>
+                                        <label htmlFor={`desktop-category-${c}`} className='text-gray-600'>{capitalizeFirstLetter(c)}</label>
                                     </div>
                                 )}
                             </div>
@@ -109,18 +115,20 @@ export default function Products() {
 
                                 <div className='my-0.5 pl-1'>
                                     <input type="radio" name="pricefilter" id='hightolow'
-                                        onClick={() => setPriceFilter('hightolow')}
+                                        checked={priceFilter === 'hightolow'} onChange={() => setPriceFilter('hightolow')}
                                         className='me-1' />
                                     <label htmlFor='hightolow' className='text-gray-600'>High to Low</label>
                                 </div>
                                 <div className='my-0.5 pl-1'>
                                     <input type="radio" name="pricefilter" id='lowtohigh'
-                                        onClick={() => setPriceFilter('lowtohigh')}
+                                        checked={priceFilter === 'lowtohigh'} onChange={() => setPriceFilter('lowtohigh')}
                                         className='me-1' />
                                     <label htmlFor='lowtohigh' className='text-gray-600'>Low to High</label>
                                 </div>
 
                             </div>
+
+                            {(searchVal || catVal || priceFilterVal) && <button type="button" className="mt-4 text-indigo-600 underline" onClick={clearFilters}>Clear filters</button>}
 
                         </div>
                         <div className="w-full sm:w-5/6">
