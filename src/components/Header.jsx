@@ -11,9 +11,10 @@ import { selectCartItems } from '../redux/cartSlice';
 import { FaAtlassian } from "react-icons/fa";
 import { FILTER_BY_SEARCH } from '../redux/filterSlice';
 import Footer from './Footer';
-import { getErrorMessage, request } from '../api/client';
+import { getErrorMessage } from '../api/client';
 import { clearStoredUser, getStoredUser } from '../utils/session';
 import { CLEAR_FAV } from '../redux/favSlice';
+import { logout } from '../getProductsData';
 
 
 const navigation = [
@@ -47,7 +48,7 @@ export default function Header() {
 
     const logOutUser = async () => {
         try {
-            await request({ url: '/users/logout', method: 'GET' });
+            await logout();
             clearStoredUser();
             dispatch(CLEAR_FAV());
             toast.success('Logged out successfully');
