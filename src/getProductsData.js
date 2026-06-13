@@ -12,3 +12,9 @@ export const placeOrder = (orderDetails, idempotencyKey) => request({
 export const getMyOrders = (url = '/orders') => request({ url, method: 'GET' });
 
 export const logout = () => request({ url: '/users/logout', method: 'POST' });
+
+export const registerUser = ({ username, email, password }) => request({
+  url: '/users/register',
+  method: 'POST',
+  data: { username, email, password },
+});
