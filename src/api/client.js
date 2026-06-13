@@ -16,7 +16,7 @@ export const api = axios.create({
 export function getErrorMessage(error, fallback = 'Something went wrong') {
   const data = error?.response?.data;
   if (typeof data === 'string' && data.trim()) return data;
-  return data?.message || error?.message || fallback;
+  return data?.error?.message || data?.message || error?.message || fallback;
 }
 
 export async function request(config) {

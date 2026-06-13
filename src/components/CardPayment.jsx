@@ -30,7 +30,7 @@ export default function CardPayment({ clientSecret, onSuccess }) {
       if (result.paymentIntent?.status !== 'succeeded') throw new Error('Payment was not completed');
 
       const order = buildOrderDetails({ cartItems, user, shippingAddress, paymentMode: 'online', paymentStatus: 'paid' });
-      await placeOrder({ ...order, paymentIntentId: result.paymentIntent.id });
+      await placeOrder({ ...order, paymentIntentId: result.paymentIntent.id }, result.paymentIntent.id);
       toast.success('Payment successful and order placed');
       onSuccess();
     } catch (error) {

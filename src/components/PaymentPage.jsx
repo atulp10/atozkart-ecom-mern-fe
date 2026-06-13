@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
@@ -10,8 +10,8 @@ import { CLEAR_DETAILS, selectDetails } from '../redux/checkoutSLice';
 import { placeOrder } from '../getProductsData';
 import { request, getErrorMessage } from '../api/client';
 import { getStoredUser } from '../utils/session';
-import { calculateOrderTotal } from '../utils/pricing';
 import { buildOrderDetails } from '../utils/orders';
+import { createIdempotencyKey } from '../utils/idempotency';
 import { useNavigate } from 'react-router';
 
 const stripePromise = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
@@ -27,17 +27,23 @@ export default function PaymentPage() {
   const user = getStoredUser();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const totals = calculateOrderTotal(cartItems);
+  const codOrderKey = useRef(createIdempotencyKey('cod'));
+  const paymentIntentKey = useRef(createIdempotencyKey('payment'));
 
   const getClientSecret = useCallback(async () => {
     try {
       setClientSecret('');
-      const data = await request({ url: '/create-payment-intent', method: 'POST', data: { amount: totals.total } });
+      const data = await request({
+        url: '/create-payment-intent',
+        method: 'POST',
+        data: { orderedItems: cartItems.map(({ _id, qty }) => ({ itemId: _id, qty: Number(qty) })) },
+        headers: { 'Idempotency-Key': paymentIntentKey.current },
+      });
       setClientSecret(data.clientSecret);
     } catch (error) {
       toast.error(getErrorMessage(error, 'Unable to initialize payment'));
     }
-  }, [totals.total]);
+  }, [cartItems]);
 
   useEffect(() => {
     if (payMode === 'online') getClientSecret();
@@ -54,7 +60,7 @@ export default function PaymentPage() {
     setLoading(true);
     try {
       const order = buildOrderDetails({ cartItems, user, shippingAddress, paymentMode: 'cod', paymentStatus: 'unpaid' });
-      await placeOrder(order);
+      await placeOrder(order, codOrderKey.current);
       toast.success('Order placed');
       finishOrder();
     } catch (error) {
