@@ -2,10 +2,11 @@ import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 import { HiBars3 } from 'react-icons/hi2'
-import { getErrorMessage, request } from '../../api/client';
+import { getErrorMessage } from '../../api/client';
 import { clearStoredUser } from '../../utils/session';
 import { useDispatch } from 'react-redux';
 import { CLEAR_FAV } from '../../redux/favSlice';
+import { logout } from '../../getProductsData';
 
 export default function AdminNavbar({ bars, openSidebar }) {
 
@@ -14,7 +15,7 @@ export default function AdminNavbar({ bars, openSidebar }) {
 
   const handleLogout = async () => {
     try {
-      await request({ url: '/users/logout', method: 'GET' });
+      await logout();
       clearStoredUser();
       dispatch(CLEAR_FAV());
       toast.success('Logged out successfully');

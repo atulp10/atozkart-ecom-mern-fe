@@ -10,3 +10,5 @@ export const placeOrder = (orderDetails, idempotencyKey) => request({
 });
 
 export const getMyOrders = (url = '/orders') => request({ url, method: 'GET' });
+
+export const logout = () => request({ url: '/users/logout', method: 'POST' });
