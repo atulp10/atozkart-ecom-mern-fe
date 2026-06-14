@@ -25,13 +25,13 @@ export function validateShippingAddress(values) {
 
 export function validateProduct(values) {
   const data = {
-    ...values,
     title: normalizeText(values.title),
+    price: Number(values.price),
     category: normalizeText(values.category),
+    stock: Number(values.stock),
+    image: normalizeText(values.image),
     brand: normalizeText(values.brand),
     description: normalizeText(values.description),
-    price: Number(values.price),
-    stock: Number(values.stock),
   };
   const errors = {};
 

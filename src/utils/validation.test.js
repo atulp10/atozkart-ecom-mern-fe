@@ -17,4 +17,31 @@ describe('validation', () => {
     const result = validateProduct({ title: 'Item', price: 0, stock: 1.5, category: 'Home', image: 'https://example.com/a.jpg', brand: '', description: '' });
     expect(result.errors).toMatchObject({ price: expect.any(String), stock: expect.any(String) });
   });
+
+  it('removes database metadata from product requests', () => {
+    const result = validateProduct({
+      _id: '67c59706461fe3c484390847',
+      title: 'Desk Lamp',
+      price: 20,
+      category: 'Home',
+      stock: 4,
+      image: 'https://example.com/lamp.jpg',
+      brand: 'Bright',
+      description: 'A useful lamp',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-02T00:00:00.000Z',
+      __v: 0,
+    });
+
+    expect(result.valid).toBe(true);
+    expect(result.data).toEqual({
+      title: 'Desk Lamp',
+      price: 20,
+      category: 'Home',
+      stock: 4,
+      image: 'https://example.com/lamp.jpg',
+      brand: 'Bright',
+      description: 'A useful lamp',
+    });
+  });
 });
