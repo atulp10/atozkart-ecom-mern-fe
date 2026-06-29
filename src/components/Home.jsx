@@ -16,7 +16,7 @@ export default function Home() {
           </div>
           </ShowLoginRegister>
           <div className="grid grid-cols-1 p-3 border-1 border-gray-400 rounded-xl sm:max-w-sm mt-3">
-            <Link to='/products'><div className='flex items-center gap-2 active:bg-blue-200'>Browse Products <HiArrowLongRight className='ml-auto size-6' /></div></Link>
+            <Link to='/products'><div className='flex items-center gap-2 active:bg-blue-200'>Explore Products <HiArrowLongRight className='ml-auto size-6' /></div></Link>
           </div>
         </div>
       </div>
